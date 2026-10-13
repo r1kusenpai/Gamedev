@@ -1,0 +1,1 @@
+{"name": "WDWCastle", "materials": [{"name": "CastleStone", "baseFactor": [0.72, 0.69, 0.63, 1], "metal": 0, "rough": 0.85, "doubleSided": true, "emissionFactor": [0, 0, 0]}], "primitives": [{"file": "Mesh0.bytes", "material": 0}]}

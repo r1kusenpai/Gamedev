@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: MedievalWallCastle_Stone
+  m_Shader: {fileID: 4800000, guid: 015a5f62bc5aaea44ae0d5b9bbcc6170, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 1
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StoneNormal:
+        m_Texture: {fileID: 2800000, guid: b6b7e1fd657cdbb43a142a30f13c4e90, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StoneTex:
+        m_Texture: {fileID: 2800000, guid: a4a5f0d7c9bed6f45a69c77bd328c11b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AutoRoof: 0
+    - _BlockHeight: 0.32
+    - _BlockWidth: 0.75
+    - _ForceRoof: 0
+    - _Joint: 0.018
+    - _RoofStartY: 66.22825
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _MortarColor: {r: 0.29, g: 0.3, b: 0.29, a: 1}
+    - _RoofColor: {r: 0.15, g: 0.18, b: 0.22, a: 1}
+    - _StoneScale: {r: 4, g: 2.887, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

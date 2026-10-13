@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: ce6cadbae9824864aaf56355c258e337
+timeCreated: 1527848071
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 119931
+  packageName: Paving Stone 01
+  packageVersion: 1.0
+  assetPath: Assets/PavingStone/Materials/PavingStone-01-Bad.mat
+  uploadId: 249211

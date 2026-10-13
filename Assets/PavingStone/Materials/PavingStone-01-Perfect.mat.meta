@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: dedc1d9470dafe046866e641dc6d6b34
+timeCreated: 1527848071
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 119931
+  packageName: Paving Stone 01
+  packageVersion: 1.0
+  assetPath: Assets/PavingStone/Materials/PavingStone-01-Perfect.mat
+  uploadId: 249211
