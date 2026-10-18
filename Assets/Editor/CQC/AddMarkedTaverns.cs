@@ -13,7 +13,7 @@ namespace StarterAssets.CQCEditorTools
  {
   const string Folder="Assets/Building/ImportedTaverns",Request="Assets/Editor/CQC/AddMarkedTaverns.request.txt";
   [Serializable] public class Model {public string name;public Mat[] materials;public Primitive[] primitives;}
-  [Serializable] public class Mat {public string name,albedo,normal,packed,occlusion,emission;public float[] baseFactor,emissionFactor;public float metal,rough;public bool doubleSided;}
+  [Serializable] public class Mat {public string name,albedo,normal,packed,occlusion,emission,alphaMode;public float[] baseFactor,emissionFactor;public float metal,rough,alphaCutoff;public bool doubleSided;}
   [Serializable] public class Primitive {public string file;public int material;}
   static AddMarkedTaverns(){EditorApplication.delayCall+=Pending;}
   static void Pending(){if(!File.Exists(Request)||EditorApplication.isPlayingOrWillChangePlaymode)return;if(EditorApplication.isCompiling||EditorApplication.isUpdating||File.Exists("Assets/Editor/CQC/CastleInnerOutline.request.txt")){EditorApplication.delayCall+=Pending;return;}if(SceneManager.GetActiveScene().name!="MyForest")return;try{Apply();AssetDatabase.DeleteAsset(Request);}catch(Exception e){Directory.CreateDirectory("Logs");File.WriteAllText("Logs/AddMarkedTaverns-error.txt",e.ToString());Debug.LogException(e);File.Move(Request,Request+".failed");}}
@@ -55,7 +55,10 @@ namespace StarterAssets.CQCEditorTools
     if(!string.IsNullOrEmpty(d.packed)){mat.SetTexture("_MetallicGlossMap",Tex(path,d.packed,false,true));mat.SetFloat("_Smoothness",1);mat.EnableKeyword("_METALLICSPECGLOSSMAP");}
     if(!string.IsNullOrEmpty(d.occlusion)){mat.SetTexture("_OcclusionMap",Tex(path,d.occlusion,false,true));mat.EnableKeyword("_OCCLUSIONMAP");}
     if(!string.IsNullOrEmpty(d.emission)){mat.SetTexture("_EmissionMap",Tex(path,d.emission,false));mat.SetColor("_EmissionColor",new Color(d.emissionFactor[0],d.emissionFactor[1],d.emissionFactor[2]));mat.EnableKeyword("_EMISSION");}
-    mat.SetFloat("_Cull",d.doubleSided?0:2);mat.doubleSidedGI=d.doubleSided;mat.enableInstancing=true;AssetDatabase.CreateAsset(mat,path+"/Material"+i+".mat");materials[i]=mat;
+    mat.SetFloat("_Cull",d.doubleSided?0:2);mat.doubleSidedGI=d.doubleSided;mat.enableInstancing=true;
+    if(d.alphaMode=="MASK"){mat.SetFloat("_AlphaClip",1);mat.SetFloat("_Cutoff",d.alphaCutoff>0?d.alphaCutoff:.5f);mat.EnableKeyword("_ALPHATEST_ON");mat.SetOverrideTag("RenderType","TransparentCutout");mat.renderQueue=2450;}
+    if(d.alphaMode=="BLEND"){mat.SetFloat("_Surface",1);mat.SetFloat("_SrcBlend",(float)BlendMode.SrcAlpha);mat.SetFloat("_DstBlend",(float)BlendMode.OneMinusSrcAlpha);mat.SetFloat("_ZWrite",0);mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");mat.SetOverrideTag("RenderType","Transparent");mat.renderQueue=3000;}
+    AssetDatabase.CreateAsset(mat,path+"/Material"+i+".mat");materials[i]=mat;
    }
    var root=new GameObject(key);
    try{for(int i=0;i<model.primitives.Length;i++)

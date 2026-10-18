@@ -421,6 +421,19 @@ namespace StarterAssets
                 if (!blocked && delta.sqrMagnitude < nearestDistance)
                 { nearest = target; nearestDistance = delta.sqrMagnitude; }
             }
+            // Boss receivers share the existing melee contact window and scenery checks.
+            foreach (var candidate in candidates)
+            {
+                var receiver=candidate.GetComponentInParent<ICombatDamageReceiver>();
+                if(receiver==null||!receiver.IsDamageable||!receiver.DamageRoot||receiver.DamageRoot.IsChildOf(transform))continue;
+                Vector3 point=candidate.ClosestPoint(origin),delta=point-origin;
+                if(!aerial&&Vector3.Dot(transform.forward,delta)<0)continue;
+                bool blocked=false;
+                foreach(var obstacle in Physics.RaycastAll(origin,delta.normalized,delta.magnitude,~0,QueryTriggerInteraction.Ignore))
+                    if(!obstacle.transform.IsChildOf(transform)&&obstacle.collider.GetComponentInParent<ICombatDamageReceiver>()!=receiver){blocked=true;break;}
+                if(blocked)continue;
+                receiver.ReceiveDamage(aerial?60f:runningHookAttack?30f:combo==3?60f:combo==0?20f:30f,transform);return true;
+            }
             if (!nearest) return false;
             nearest.ReceivePunch(aerial ? 60f : runningHookAttack ? 30f : combo == 3 ? 60f : combo == 0 ? 20f : 30f);
             return true;

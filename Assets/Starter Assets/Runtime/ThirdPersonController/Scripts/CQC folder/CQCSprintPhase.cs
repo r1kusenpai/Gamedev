@@ -42,7 +42,7 @@ namespace StarterAssets
             var motor = GetComponent<ThirdPersonController>();
             var controller = GetComponent<CharacterController>();
             if ((combat && (combat.IsBusy || combat.IsHolding)) || (motor && motor.IsLandingFromAirAttack)
-                || (controller && !controller.isGrounded) || (posture && (posture.IsProne || posture.IsDiving))) return;
+                || (controller && !controller.isGrounded)) return;
             if (posture && posture.CurrentStance == CQCPosture.Stance.Crouching)
             {
                 if (!posture.TryChangeStance(CQCPosture.Stance.Standing)) return;

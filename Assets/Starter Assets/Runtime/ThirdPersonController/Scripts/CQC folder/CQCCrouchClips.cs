@@ -56,10 +56,22 @@ namespace StarterAssets
         private bool finishRollAfterEvaluation;
         [Range(1f, 4f)] public float RollPlaybackSpeed = 2f;
         public float RollDistance = 3.5f;
+        [Range(0f,.5f)] public float RollStartNormalized = .17f;
+        [Range(.5f,1f)] public float RollEndNormalized = .89f;
+        private float rollTravelElapsed;
         private Vector3 rollDirection;
         private float rollDuration, rollTravelSpeed;
         public bool IsRolling { get; private set; }
         public Vector3 RollVelocity => IsRolling ? rollDirection * rollTravelSpeed : Vector3.zero;
+        public Vector3 ConsumeRollDisplacement(float deltaTime)
+        {
+            if(!IsRolling || rollDuration<=0f)return Vector3.zero;
+            float before=Mathf.Clamp01(rollTravelElapsed/rollDuration);
+            rollTravelElapsed=Mathf.Min(rollDuration,rollTravelElapsed+Mathf.Max(0f,deltaTime));
+            float after=Mathf.Clamp01(rollTravelElapsed/rollDuration);
+            float distance=Mathf.Max(0f,RollDistance)*(Mathf.SmoothStep(0f,1f,after)-Mathf.SmoothStep(0f,1f,before));
+            return rollDirection*distance;
+        }
         private AnimationMixerPlayable movingPunchMixer;
         private readonly AnimationClipPlayable[] movingPunches = new AnimationClipPlayable[3];
         private bool movingPunchActive;
@@ -72,7 +84,7 @@ namespace StarterAssets
             var combat = GetComponent<CQCCombat>();
             var motor = GetComponent<ThirdPersonController>();
             if (!controller || !controller.isGrounded || (combat && (combat.IsBusy || combat.IsHolding))
-                || (motor && motor.IsLandingFromAirAttack) || (posture && (posture.IsProne || posture.IsDiving))) return;
+                || (motor && motor.IsLandingFromAirAttack)) return;
             if (posture && posture.CurrentStance != CQCPosture.Stance.Standing
                 && !posture.TryChangeStance(CQCPosture.Stance.Standing)) return;
             if (inputs != null && inputs.move.sqrMagnitude > 0.001f)
@@ -82,12 +94,16 @@ namespace StarterAssets
                 Vector3 direction = forward * inputs.move.y + right * inputs.move.x;
                 if (direction.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(direction);
             }
-            IsRolling = true; rollElapsed = 0f; finishRollAfterEvaluation = false;
+            var weapon=GetComponent<WeaponController>();if(weapon)weapon.CancelForRoll();
+            crouchArmWeight=0f;
+            if(armLayers.IsValid()){armLayers.SetInputWeight(1,0);armLayers.SetInputWeight(2,0);armLayers.SetInputWeight(3,0);}
+            IsRolling = true; rollElapsed = rollTravelElapsed = 0f; finishRollAfterEvaluation = false;
             rollDirection = transform.forward;
-            rollDuration = rollClip.length / Mathf.Max(1f, RollPlaybackSpeed);
-            float incomingSpeed = Vector3.ProjectOnPlane(controller.velocity, Vector3.up).magnitude;
-            rollTravelSpeed = Mathf.Max(RollDistance / Mathf.Max(0.1f, rollDuration), incomingSpeed);
-            rollPlayable.SetTime(0f); rollPlayable.SetDuration(rollClip.length); rollPlayable.SetDone(false); rollPlayable.SetSpeed(RollPlaybackSpeed);
+            float start=rollClip.length*Mathf.Clamp(RollStartNormalized,0f,.5f);
+            float end=rollClip.length*Mathf.Clamp(RollEndNormalized,.5f,1f);
+            rollDuration = Mathf.Max(.1f,end-start) / Mathf.Max(1f, RollPlaybackSpeed);
+            rollTravelSpeed = Mathf.Max(0f,RollDistance) / rollDuration;
+            rollPlayable.SetTime(start);rollPlayable.SetDuration(rollClip.length);rollPlayable.SetDone(false);rollPlayable.SetSpeed(RollPlaybackSpeed);
             SetExclusiveWeight(14);
         }
         private AnimationClip sprintClip, crouchSprintClip;
@@ -418,6 +434,7 @@ namespace StarterAssets
 
         private void Update()
         {
+            if (DomainInteractionState.IsModal) return;
             if (!graph.IsValid()) return;
             movingPunchActive = false;
             armLayers.SetInputWeight(3, 0f);
@@ -433,14 +450,10 @@ namespace StarterAssets
             {
                 rollElapsed += Time.deltaTime;
                 SetExclusiveWeight(14);
+                float rollWeight=Mathf.Min(Mathf.Clamp01(rollElapsed/.06f),Mathf.Clamp01((rollDuration-rollElapsed)/.1f));
+                int locomotion=sprintPhase && sprintPhase.IsSecondPhase && inputs!=null && inputs.move.sqrMagnitude>.001f ? 13 : 0;
+                mixer.SetInputWeight(14,rollWeight);mixer.SetInputWeight(locomotion,1f-rollWeight);
                 if (rollElapsed >= rollDuration) finishRollAfterEvaluation = true;
-                return;
-            }
-            if (posture && posture.IsProne)
-            {
-                walkWeight = crouchArmWeight = 0f;
-                armLayers.SetInputWeight(1, 0f);
-                SetExclusiveWeight(0);
                 return;
             }
             if (runningHook)
@@ -580,7 +593,11 @@ namespace StarterAssets
             if (finishHookAfterEvaluation && runningHook)
             { runningHook = false; finishHookAfterEvaluation = false; armLayers.SetInputWeight(2, 0f); }
             if (finishRollAfterEvaluation && IsRolling)
-            { IsRolling = false; finishRollAfterEvaluation = false; SetExclusiveWeight(0); }
+            {
+                IsRolling = false; finishRollAfterEvaluation = false;rollTravelSpeed=0f;rollPlayable.SetSpeed(0);
+                int locomotion=sprintPhase && sprintPhase.IsSecondPhase && inputs!=null && inputs.move.sqrMagnitude>.001f ? 13 : 0;
+                SetExclusiveWeight(locomotion);
+            }
         }
         private void OnDestroy() { if (graph.IsValid()) graph.Destroy(); }
     }

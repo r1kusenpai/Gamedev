@@ -120,6 +120,19 @@ namespace StarterAssets
             _verticalVelocity = -4f;
         }
 
+        public void ResetAfterDomainTravel(float facing)
+        {
+            _verticalVelocity = -2f;
+            _speed = 0f;
+            _animationBlend = 0f;
+            _rotationVelocity = 0f;
+            _targetRotation = facing;
+            _cinemachineTargetYaw = facing;
+            _cinemachineTargetPitch = 10f;
+            IsLandingFromAirAttack = false;
+            if (CinemachineCameraTarget) CinemachineCameraTarget.transform.rotation = Quaternion.Euler(10f, facing, 0f);
+        }
+
         private bool IsCurrentDeviceMouse
         {
             get
@@ -246,10 +259,12 @@ namespace StarterAssets
         {
             if (TryGetComponent<WeaponController>(out var weapon) && weapon.DodgeActive)
             { _controller.Move(Vector3.up * (_verticalVelocity * Time.deltaTime)); return; }
+            if (weapon && weapon.OriginalSwordAttackActive)
+            { _controller.Move(Vector3.up * (_verticalVelocity * Time.deltaTime)); return; }
             if (_crouchClips != null && _crouchClips.IsRolling)
             {
                 // Dodge travel is gameplay movement, not a mesh offset that resets at clip end.
-                _controller.Move((_crouchClips.RollVelocity + Vector3.up * _verticalVelocity) * Time.deltaTime);
+                _controller.Move(_crouchClips.ConsumeRollDisplacement(Time.deltaTime) + Vector3.up * (_verticalVelocity * Time.deltaTime));
                 return;
             }
             if (IsLandingFromAirAttack && (_crouchClips == null || !_crouchClips.IsAirAttackPlaying))
@@ -274,8 +289,7 @@ namespace StarterAssets
             if (_sprintPhase != null && _sprintPhase.IsSecondPhase) targetSpeed = _sprintPhase.SecondPhaseSpeed;
             if (_posture != null && _posture.enabled)
             {
-                if (_posture.IsDiving) targetSpeed = 0f; else if (_posture.IsProne) targetSpeed = _posture.ProneSpeed;
-                else if (_posture.CurrentStance == CQCPosture.Stance.Crouching) targetSpeed = _input.sprint ? _posture.CrouchSprintSpeed : _posture.CrouchSpeed;
+                if (_posture.CurrentStance == CQCPosture.Stance.Crouching) targetSpeed = _input.sprint ? _posture.CrouchSprintSpeed : _posture.CrouchSpeed;
             }
 
             // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
@@ -312,7 +326,6 @@ namespace StarterAssets
             if (_combat != null && _combat.IsHolding) _speed = 0f;
             if (_crouchClips != null && _crouchClips.IsTransitioning) _speed = 0f;
             _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
-            if (_posture != null && _posture.enabled && _posture.IsProne) _animationBlend = 0f;
             if (_animationBlend < 0.01f) _animationBlend = 0f;
 
             // normalise input direction
@@ -320,7 +333,7 @@ namespace StarterAssets
 
             // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is a move input rotate player when the player is moving
-            if (_input.move != Vector2.zero && (_combat == null || !_combat.IsHolding) && (_posture == null || !_posture.IsDiving)
+            if (_input.move != Vector2.zero && (_combat == null || !_combat.IsHolding)
                 && (_crouchClips == null || !_crouchClips.IsRolling))
             {
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
@@ -337,7 +350,7 @@ namespace StarterAssets
 
             // move the player
             _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
-                             (_posture != null && _posture.enabled && _posture.IsDiving ? _posture.DiveVelocity : new Vector3(0.0f, _verticalVelocity, 0.0f)) * Time.deltaTime);
+                             new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 
             // update animator if using character
             if (_hasAnimator)

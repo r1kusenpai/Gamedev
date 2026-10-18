@@ -11,19 +11,21 @@ namespace StarterAssets
   public Vector3[] BottomPoints,TopPoints;
   public Vector3 LowerStation,UpperStation;
   public float Speed=4f;
+  public bool AutoCycle=true;public float StationWaitSeconds=5f;float stationWait;
+  public float BoardingTimeRemaining=>moving?0:stationWait;
   CharacterController player;TransportPassenger passenger;float phase,target;bool moving;
-  void Start(){FindPlayer();Place();}
+  void Start(){FindPlayer();Place();stationWait=StationWaitSeconds;}
   void FindPlayer(){var go=GameObject.FindGameObjectWithTag("Player");if(go)player=go.GetComponent<CharacterController>();}
   int Rider(){for(int i=0;i<2;i++)if(TransportPassenger.Contains(player,Decks[i]))return i;return -1;}
   void Update()
   {
-   if(!player)FindPlayer();if(!player)return;bool pressed=false;
+   if(!player)FindPlayer();bool pressed=false;
 #if ENABLE_INPUT_SYSTEM
    pressed=Keyboard.current!=null&&Keyboard.current.eKey.wasPressedThisFrame;
 #else
    pressed=Input.GetKeyDown(KeyCode.E);
 #endif
-   if(pressed&&!moving){Interact();}
+   if(AutoCycle&&!moving){stationWait=Mathf.Max(0,stationWait-Time.deltaTime);if(stationWait<=0){target=phase<.5f?1f:0f;moving=true;}}else if(!AutoCycle&&pressed&&!moving&&player){Interact();}
    Advance();
   }
   void Interact()
@@ -36,11 +38,14 @@ namespace StarterAssets
    int aboard=Rider();if(aboard>=0&&(!passenger||!passenger.Attached)){passenger=TransportPassenger.Get(player);passenger.Attach(Carts[aboard],Decks[aboard]);}
    phase=Mathf.MoveTowards(phase,target,Speed*Time.deltaTime/Vector3.Distance(BottomPoints[0],TopPoints[0]));Place();Physics.SyncTransforms();
    if(passenger)passenger.Follow();
-   if(Mathf.Abs(phase-target)<.0001f){moving=false;if(passenger)passenger.Release();passenger=null;}
+   if(Mathf.Abs(phase-target)<.0001f){moving=false;stationWait=StationWaitSeconds;if(passenger)passenger.Release();passenger=null;}
   }
+  public bool NpcMoving=>moving;
+  public int NpcCartAt(bool upper){if(moving||Carts==null||Carts.Length!=2)return -1;for(int i=0;i<2;i++)if(Vector3.Distance(Carts[i].position,upper?TopPoints[i]:BottomPoints[i])<.08f)return i;return -1;}
+  public bool TryNpcMove(int cart,bool upper){if(AutoCycle||moving||Rider()>=0||cart<0||cart>1)return false;target=upper?(cart==0?1:0):(cart==0?0:1);moving=true;return true;}
   void OnDisable(){if(passenger)passenger.Release();}
   void Place(){if(Carts==null||Carts.Length!=2)return;Carts[0].position=Vector3.Lerp(BottomPoints[0],TopPoints[0],phase);Carts[1].position=Vector3.Lerp(BottomPoints[1],TopPoints[1],1-phase);}
-  public void CallFromStation(bool upper){if(moving)return;int cart=Vector3.Distance(Carts[0].position,upper?UpperStation:LowerStation)<Vector3.Distance(Carts[1].position,upper?UpperStation:LowerStation)?0:1;target=upper?(cart==0?1:0):(cart==0?0:1);moving=true;}
+  public void CallFromStation(bool upper){if(AutoCycle||moving)return;int cart=Vector3.Distance(Carts[0].position,upper?UpperStation:LowerStation)<Vector3.Distance(Carts[1].position,upper?UpperStation:LowerStation)?0:1;target=upper?(cart==0?1:0):(cart==0?0:1);moving=true;}
  }
 }
 

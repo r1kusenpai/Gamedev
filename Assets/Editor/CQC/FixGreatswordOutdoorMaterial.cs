@@ -1,0 +1,13 @@
+#if UNITY_EDITOR
+using System;using System.IO;using System.Reflection;using UnityEditor;using UnityEngine;using StarterAssets;
+[InitializeOnLoad]public static class FixGreatswordOutdoorMaterial {
+ const string Req="Assets/Editor/CQC/FixGreatswordOutdoorMaterial.request.txt",Out="C:/Users/Joshua/Documents/Codex/2026-10-11/ca/outputs/greatsword-lighting/";static double next,started;static int stage;static Material material;
+ static FixGreatswordOutdoorMaterial(){EditorApplication.update+=Poll;}
+ static void Poll(){if(EditorApplication.timeSinceStartup<next)return;next=EditorApplication.timeSinceStartup+.2;if(!File.Exists(Req)||EditorApplication.isCompiling||EditorApplication.isUpdating)return;
+ try{Directory.CreateDirectory(Out);
+ if(stage==0){material=AssetDatabase.LoadAssetAtPath<Material>("Assets/Building/ImportedTaverns/InfernoCleaver/Material0.mat");if(!material||!material.GetTexture("_BaseMap"))throw new Exception("Greatsword material or base texture missing");File.Copy(AssetDatabase.GetAssetPath(material),Out+"Material0-before.mat.txt",true);File.WriteAllText(Out+"check.txt","Shader="+material.shader.name+"\nBase texture="+AssetDatabase.GetAssetPath(material.GetTexture("_BaseMap"))+"\nBefore metallic="+material.GetFloat("_Metallic")+" smoothness="+material.GetFloat("_Smoothness")+" emission="+material.IsKeywordEnabled("_EMISSION")+"\n");if(EditorApplication.isPlaying)ScreenCapture.CaptureScreenshot(Out+"before.png");started=EditorApplication.timeSinceStartup;stage=1;return;}
+ if(stage==1){if(EditorApplication.timeSinceStartup-started<1)return;Undo.RecordObject(material,"Fix greatsword outdoor visibility");material.SetFloat("_Metallic",.45f);material.SetFloat("_Smoothness",.4f);material.SetFloat("_EnvironmentReflections",1);material.SetFloat("_SpecularHighlights",1);material.SetColor("_BaseColor",Color.white);if(material.GetTexture("_EmissionMap")){material.EnableKeyword("_EMISSION");material.SetColor("_EmissionColor",new Color(.18f,.18f,.18f,1));}EditorUtility.SetDirty(material);AssetDatabase.SaveAssetIfDirty(material);File.AppendAllText(Out+"check.txt","After metallic="+material.GetFloat("_Metallic")+" smoothness="+material.GetFloat("_Smoothness")+" emission="+material.IsKeywordEnabled("_EMISSION")+"\nOriginal texture references preserved. Material saved.\n");started=EditorApplication.timeSinceStartup;stage=2;return;}
+ if(stage==2){if(EditorApplication.timeSinceStartup-started<1)return;if(EditorApplication.isPlaying)ScreenCapture.CaptureScreenshot(Out+"after.png");File.Delete(Req);stage=0;Debug.Log("GREATSWORD_OUTDOOR_MATERIAL_FIXED");}
+ }catch(Exception e){File.WriteAllText(Out+"error.txt",e.ToString());File.Delete(Req);stage=0;Debug.LogException(e);}}
+}
+#endif

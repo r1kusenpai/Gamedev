@@ -18,14 +18,14 @@ namespace StarterAssets
   bool Riding(){return TransportPassenger.Contains(player,Deck);}
   void Update()
   {
-   if(!player)FindPlayer();if(!player||!Platform)return;
+   if(!player)FindPlayer();if(!Platform)return;
    bool pressed=false;
 #if ENABLE_INPUT_SYSTEM
    pressed=Keyboard.current!=null&&Keyboard.current.eKey.wasPressedThisFrame;
 #else
    pressed=Input.GetKeyDown(KeyCode.E);
 #endif
-   if(pressed&&!moving){Interact();}
+   if(pressed&&!moving&&player){Interact();}
    Advance();
   }
   void Interact()
@@ -44,6 +44,9 @@ namespace StarterAssets
    if(passenger)passenger.Follow();
    if(Mathf.Abs(y-target)<.001f){moving=false;if(passenger)passenger.Release();passenger=null;}
   }
+  public bool NpcMoving=>moving;
+  public bool NpcAtStop(bool upper)=>!moving&&Platform&&Mathf.Abs(Platform.position.y-(upper?UpperHeight:LowerHeight))<.08f;
+  public bool TryNpcMove(bool upper){if(moving||!Platform)return false;target=upper?UpperHeight:LowerHeight;moving=true;return true;}
   void OnDisable(){if(passenger)passenger.Release();}
  }
 }

@@ -1,1 +1,0 @@
-{"name": "GreatEagleBow", "materials": [{"name": "Material", "baseFactor": [1, 1, 1, 1], "metal": 1, "rough": 1, "doubleSided": true, "albedo": "Material0_albedo.png", "normal": "Material0_normal.png", "packed": "Material0_metalSmooth.png", "emissionFactor": [0, 0, 0]}], "primitives": [{"file": "Mesh0.bytes", "material": 0}]}

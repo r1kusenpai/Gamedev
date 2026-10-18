@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 namespace StarterAssets
 {
  [DefaultExecutionOrder(10)] [RequireComponent(typeof(Animator),typeof(CharacterController))]
- public class WeaponController : MonoBehaviour
+ public partial class WeaponController : MonoBehaviour
  {
   public GameObject SwordModelPrefab,GreatswordModelPrefab,BowModelPrefab;
   public Vector3 SwordGripOffset,GreatswordGripOffset,BowGripOffset;
@@ -18,10 +18,10 @@ namespace StarterAssets
   public Weapon CurrentWeapon=Weapon.Unarmed;
   public bool Equipped=>CurrentWeapon!=Weapon.Unarmed;
   public bool DodgeActive=>false;
-  public bool UsesWeaponPose=>Equipped && !(posture && posture.CurrentStance!=CQCPosture.Stance.Standing) && !(animationSource && (animationSource.IsRolling || animationSource.IsTransitioning));
+  public bool UsesWeaponPose=>Equipped && !(UsesSwordAttackSet && SwordUseNormalLocomotion && !swordSequence.Active) && !(posture && posture.CurrentStance!=CQCPosture.Stance.Standing && !(UsesSwordAttackSet && HasNewSwordAnimations)) && !(animationSource && (animationSource.IsRolling || animationSource.IsTransitioning));
   public bool AutoFitGrips=true;
   public Vector3 SwordGripAdjustment,GreatswordGripAdjustment,BowGripAdjustment;
-  public bool UseActionRootMotion=>Equipped&&actionTime>0&&!dodging&&!usingUpperBody&&CurrentWeapon!=Weapon.Bow;
+  public bool UseActionRootMotion=>SwordAuthoredTravel || Equipped&&!(UsesSwordAttackSet && HasNewSwordAnimations)&&actionTime>0&&!dodging&&!usingUpperBody&&CurrentWeapon!=Weapon.Bow;
   public float ChargeSeconds=1.4f,ComboResetSeconds=1f;
   [Header("Bow focus")]
   [Range(.4f,1f)] public float BowZoomRatio=.65f;
@@ -54,7 +54,7 @@ namespace StarterAssets
    }
    bowArmBones=new[]{animator.GetBoneTransform(HumanBodyBones.Spine),animator.GetBoneTransform(HumanBodyBones.Chest),animator.GetBoneTransform(HumanBodyBones.UpperChest),animator.GetBoneTransform(HumanBodyBones.Neck),animator.GetBoneTransform(HumanBodyBones.Head),animator.GetBoneTransform(HumanBodyBones.LeftUpperArm),animator.GetBoneTransform(HumanBodyBones.LeftLowerArm),animator.GetBoneTransform(HumanBodyBones.LeftHand),animator.GetBoneTransform(HumanBodyBones.RightUpperArm),animator.GetBoneTransform(HumanBodyBones.RightLowerArm),animator.GetBoneTransform(HumanBodyBones.RightHand)};
    bowArmRotations=new Quaternion[bowArmBones.Length];
-   ready=true;ShowWeapons();
+   InitializeSwordAnimations();InitializePlayerHit2();ready=true;ShowWeapons();
   }
   AnimationClip Clip(string group,string name)
   {
@@ -71,7 +71,8 @@ namespace StarterAssets
   void Select(Weapon weapon)
   {
    if(actionTime>0||(combat&&(combat.IsBusy||combat.IsHolding))||(animationSource&&(animationSource.IsRolling||animationSource.IsTransitioning||animationSource.IsHostageSequenceActive||animationSource.IsAirAttackPlaying||animationSource.IsGroundAttackPlaying)))return;
-   CurrentWeapon=weapon;pending=charging=queued=greatHoldRequested=false;combo=0;ShowWeapons();
+   CurrentWeapon=weapon;CancelAction();UsesNormalWeaponRunningBody=false;ShowWeapons();
+   if(UsesSwordAttackSet && HasNewSwordAnimations){Play(SwordAnimations.Idle,true);return;}
    if(!Equipped)return;string group=Group();string name=CurrentWeapon==Weapon.Sword?"draw sword 1":CurrentWeapon==Weapon.Greatsword?"draw a great sword 1":"standing equip bow";
    BeginAction(Clip(group,name),0,false);
   }
@@ -80,19 +81,22 @@ namespace StarterAssets
   {
    bowAiming=false;bowCharge=0;
    if(!ready||!graph.IsValid())return;
+   if(UpdatePlayerHit2())return;
+
 #if ENABLE_INPUT_SYSTEM
    var k=Keyboard.current;var m=Mouse.current;
    if(k!=null){if(k.digit1Key.wasPressedThisFrame||k.numpad1Key.wasPressedThisFrame)Select(Weapon.Sword);if(k.digit2Key.wasPressedThisFrame||k.numpad2Key.wasPressedThisFrame)Select(Weapon.Greatsword);if(k.digit3Key.wasPressedThisFrame||k.numpad3Key.wasPressedThisFrame)Select(Weapon.Bow);if(k.digit4Key.wasPressedThisFrame||k.numpad4Key.wasPressedThisFrame||k.xKey.wasPressedThisFrame)Select(Weapon.Unarmed);}
-   bool down=m!=null&&m.leftButton.wasPressedThisFrame,up=m!=null&&m.leftButton.wasReleasedThisFrame,held=m!=null&&m.leftButton.isPressed,right=m!=null&&m.rightButton.isPressed,alt=k!=null&&k.leftAltKey.wasPressedThisFrame;
+   bool down=m!=null&&m.leftButton.wasPressedThisFrame,up=m!=null&&m.leftButton.wasReleasedThisFrame,held=m!=null&&m.leftButton.isPressed,right=m!=null&&m.rightButton.isPressed;
 #else
    if(Input.GetKeyDown(KeyCode.Alpha1)||Input.GetKeyDown(KeyCode.Keypad1))Select(Weapon.Sword);if(Input.GetKeyDown(KeyCode.Alpha2)||Input.GetKeyDown(KeyCode.Keypad2))Select(Weapon.Greatsword);if(Input.GetKeyDown(KeyCode.Alpha3)||Input.GetKeyDown(KeyCode.Keypad3))Select(Weapon.Bow);if(Input.GetKeyDown(KeyCode.Alpha4)||Input.GetKeyDown(KeyCode.Keypad4)||Input.GetKeyDown(KeyCode.X))Select(Weapon.Unarmed);
-   bool down=Input.GetMouseButtonDown(0),up=Input.GetMouseButtonUp(0),held=Input.GetMouseButton(0),right=Input.GetMouseButton(1),alt=Input.GetKeyDown(KeyCode.LeftAlt);
+   bool down=Input.GetMouseButtonDown(0),up=Input.GetMouseButtonUp(0),held=Input.GetMouseButton(0),right=Input.GetMouseButton(1);
 #endif
-   overlay.SetInputWeight(0,1);overlay.SetInputWeight(1,Equipped?1:0);if(!Equipped)return;
-   if(alt && movement.Grounded){CancelAction();animationSource.TryStartRoll();}
-   if(animationSource.IsRolling || animationSource.IsTransitioning && CurrentWeapon!=Weapon.Bow || (posture && posture.IsProne))
+   overlay.SetInputWeight(0,1);overlay.SetInputWeight(1,Equipped?1:0);
+   ResetSwordLowerLayer();if(downloadedGreatCarry.IsValid())overlay.SetInputWeight(3,0);if(!Equipped)return;
+   if(animationSource.IsRolling || animationSource.IsTransitioning && CurrentWeapon!=Weapon.Bow)
    {CancelAction();overlay.SetInputWeight(1,0);return;}
    bool crouched=posture && posture.CurrentStance==CQCPosture.Stance.Crouching;
+   if(UsesSwordAttackSet && HasNewSwordAnimations){UpdateSword(down,up,held,crouched);return;}
    if(CurrentWeapon==Weapon.Greatsword)
    {
     if(down){pressedAt=Time.time;pending=true;}
@@ -114,10 +118,7 @@ namespace StarterAssets
      }
     }
    }
-   bool greatCrouchGrip=crouched && CurrentWeapon==Weapon.Greatsword && actionTime<=0;
-   overlay.SetInputWeight(1,crouched && actionTime<=0 && !charging && !greatCrouchGrip ? 0:1);
-   bool upper=(crouched || input&&input.move.sqrMagnitude>.01f)&&movement.Grounded&&!dodging&&(charging||actionTime>0&&attackDamage>0||CurrentWeapon==Weapon.Bow&&actionTime>0&&currentClip&&currentClip.name.Contains("recoil"))&&currentClip&&!currentClip.name.Contains("slide")&&!currentClip.name.Contains("jump");
-   usingUpperBody=upper || greatCrouchGrip || CurrentWeapon==Weapon.Bow && actionTime>0 && currentClip && currentClip.name.Contains("recoil");overlay.SetLayerMaskFromAvatarMask(1,greatCrouchGrip?greatGripMask:upper || CurrentWeapon==Weapon.Bow && actionTime>0 && currentClip && currentClip.name.Contains("recoil")?upperMask:fullMask);
+   bool greatCrouchGrip=ConfigureWeaponPoseMask(crouched);
    fade=Mathf.Min(1,fade+Time.deltaTime/.12f);clips.SetInputWeight(currentSlot,fade);clips.SetInputWeight(1-currentSlot,players[1-currentSlot].IsValid()?1-fade:0);
    if(CurrentWeapon==Weapon.Bow && down){pressedAt=Time.time;pending=true;}
    if(actionTime>0)
@@ -169,13 +170,21 @@ namespace StarterAssets
    if(movement&&!movement.Grounded){Play(CurrentWeapon==Weapon.Bow?Clip("Bow","fall a loop"):Clip(Group(),CurrentWeapon==Weapon.Sword?"sword and shield jump":"great sword jump"));return;}
    if(crouch&&CurrentWeapon!=Weapon.Bow){Play(Clip(Group(),CurrentWeapon==Weapon.Sword?(moving?"sword and shield crouching":"sword and shield crouch idle"):(moving?"great sword crouching (3)":"great sword crouching")));return;}
    if(!moving){Play(Idle());return;}
-   string name=CurrentWeapon==Weapon.Sword?(input.sprint?"sword and shield run":"sword and shield walk"):CurrentWeapon==Weapon.Greatsword?(input.sprint?"great sword run":"great sword walk"):(input.sprint?"standing run forward":"standing walk forward");Play(Clip(Group(),name));
+   bool sprinting=WeaponSprintActive;
+   string name=CurrentWeapon==Weapon.Sword?(sprinting?"sword and shield run":"sword and shield walk"):CurrentWeapon==Weapon.Greatsword?(sprinting?"great sword run":"great sword walk"):(sprinting?"standing run forward":"standing walk forward");
+   Play(Clip(Group(),name));
+   if(UsesNormalWeaponRunningBody && currentClip && players[currentSlot].IsValid()) {
+    // Align the carrying-arm cycle with the faster second sprint phase; the normal graph owns body/legs.
+    float rate=swordSprintPhase && swordSprintPhase.IsSecondPhase && movement ? swordSprintPhase.SecondPhaseSpeed/Mathf.Max(.1f,movement.SprintSpeed) : 1f;
+    players[currentSlot].SetSpeed(Mathf.Clamp(rate,.75f,1.75f));
+   }
   }
   void BeginAction(AnimationClip clip,float damage,bool dodge)
   {
    if(!clip){Debug.LogWarning("Required weapon clip is missing. Run Tools > Weapons > Prepare Weapon Packs.",this);return;}
    if(CurrentWeapon==Weapon.Bow || posture && posture.CurrentStance==CQCPosture.Stance.Crouching){usingUpperBody=true;overlay.SetLayerMaskFromAvatarMask(1,upperMask);}
-   heldSlashAction=false;overlay.SetInputWeight(1,1);Play(clip,true);actionLength=clip.length;actionTime=actionLength;attackDamage=damage;dodging=dodge;hits.Clear();
+   ResetSlashSoundWindow();heldSlashAction=false;overlay.SetInputWeight(1,1);Play(clip,true);actionLength=clip.length;actionTime=actionLength;attackDamage=damage;dodging=dodge;hits.Clear();ClearCombatReceiverHits();
+   if(CurrentWeapon==Weapon.Greatsword && !UsesCopiedSwordAttacks && posture && posture.CurrentStance==CQCPosture.Stance.Crouching)ConfigureWeaponPoseMask(true);
   }
   void BeginGreatHeldSlash()
   {
@@ -186,7 +195,8 @@ namespace StarterAssets
   }
   void Attack(bool charged)
   {
-   FaceCamera();bool air=movement&&!movement.Grounded;bool run=input&&input.sprint&&input.move.sqrMagnitude>.01f;
+   FaceCamera();bool standing=!posture||posture.CurrentStance==CQCPosture.Stance.Standing;
+   bool air=standing&&movement&&!movement.Grounded;bool run=standing&&input&&WeaponSprintActive&&input.move.sqrMagnitude>.01f;
    float damage=CurrentWeapon==Weapon.Greatsword?GreatswordDamage:SwordDamage;string name;
    if(charged){damage*=Mathf.Lerp(1.3f,2.3f,Mathf.Clamp01((Time.time-pressedAt)/ChargeSeconds));name=CurrentWeapon==Weapon.Greatsword?"great sword attack":"sword and shield slash (5)";combo=0;}
    else if(air){name=CurrentWeapon==Weapon.Greatsword?"great sword jump attack":"sword and shield attack (3)";damage*=1.35f;}
@@ -198,9 +208,14 @@ namespace StarterAssets
    }
    BeginAction(Clip(Group(),name),damage,false);
   }
+  public void CancelForRoll()
+  {
+   CancelAction();
+   if(overlay.IsValid()){overlay.SetInputWeight(1,0);if(overlay.GetInputCount()>2)overlay.SetInputWeight(2,0);}
+  }
   void CancelAction()
   {
-   heldSlashAction=false;holdRecoveryUntil=0;actionTime=attackDamage=0;pending=charging=queued=queuedCharged=dodging=greatHoldRequested=false;combo=0;
+   swordSequence.Reset();greatCrouchActionFrame=false;heldSlashAction=false;holdRecoveryUntil=0;actionTime=attackDamage=0;pending=charging=queued=queuedCharged=dodging=greatHoldRequested=false;combo=0;
   }
   public Vector3 FilterActionTravel(Vector3 travel)
   {
@@ -216,6 +231,7 @@ namespace StarterAssets
   void CheckHit()
   {
    float reach=CurrentWeapon==Weapon.Greatsword?2.5f:1.8f;Vector3 center=transform.position+Vector3.up*(posture?posture.HitHeight:1.1f)+transform.forward*(reach*.65f);
+   CheckCombatReceiverHits(center,reach*.55f);
    foreach(var col in Physics.OverlapSphere(center,reach*.55f,~0,QueryTriggerInteraction.Ignore))
    {
     var enemy=col.GetComponentInParent<CQCTrainingTarget>();if(!enemy||enemy.transform.IsChildOf(transform)||!hits.Add(enemy))continue;
@@ -224,8 +240,9 @@ namespace StarterAssets
     foreach(var obstacle in Physics.RaycastAll(start,(finish-start).normalized,(finish-start).magnitude,~0,QueryTriggerInteraction.Ignore))
      if(!obstacle.transform.IsChildOf(transform)&&obstacle.collider.GetComponentInParent<CQCTrainingTarget>()!=enemy){blocked=true;break;}
     if(blocked){hits.Remove(enemy);continue;}
-    bool sneak=posture&&posture.CurrentStance==CQCPosture.Stance.Crouching&&Vector3.Dot(enemy.transform.forward,-toward.normalized)<-.35f;enemy.ReceivePunch(attackDamage*(sneak?2.2f:1),true);
+    bool sneak=posture&&posture.CurrentStance==CQCPosture.Stance.Crouching&&Vector3.Dot(enemy.transform.forward,-toward.normalized)<-.35f;enemy.ReceivePunch(attackDamage*(sneak?2.2f:1),true);NoteSlashContact();
    }
+   ResolveSlashSound();
   }
   void FireArrow(float charge)
   {
@@ -235,7 +252,7 @@ namespace StarterAssets
    var flight=arrow.AddComponent<WeaponArrow>();flight.Owner=transform;flight.Damage=ArrowDamage*Mathf.Lerp(1,2,charge);flight.Velocity=(target-from).normalized*Mathf.Lerp(24,45,charge);
   }
   bool BowArmPoseActive=>CurrentWeapon==Weapon.Bow && (bowAiming || actionTime>0 && currentClip && currentClip.name.Contains("recoil"))
-   && !(posture && posture.IsProne) && !(animationSource && animationSource.IsRolling);
+   && !(animationSource && animationSource.IsRolling);
   void OnAnimatorIK(int layer)
   {
    if(!ready || !BowArmPoseActive || bowArmBones==null)return;
@@ -280,8 +297,8 @@ namespace StarterAssets
    }
    GUI.matrix=saved;
   }
-  void OnDisable(){bowAiming=false;focusBlend=0;RestoreBowZoom();}
-  void OnDestroy(){RestoreBowZoom();}
+  void OnDisable(){CancelAction();if(overlay.IsValid()){overlay.SetInputWeight(1,0);if(overlay.GetInputCount()>2)overlay.SetInputWeight(2,0);}bowAiming=false;focusBlend=0;RestoreBowZoom();}
+  void OnDestroy(){if(playerHit2Mask)Destroy(playerHit2Mask);if(downloadedGreatCarryMask)Destroy(downloadedGreatCarryMask);RestoreBowZoom();if(swordMovingArmsMask)Destroy(swordMovingArmsMask);}
   void OnGUI()
   {
    if(CurrentWeapon!=Weapon.Bow)return;Color saved=GUI.color;GUI.color=Color.white;
@@ -302,15 +319,24 @@ namespace StarterAssets
   {
    UpdateBowFocus();
    if(!ready || !animator.isHuman)return;
+   ApplyDirectionalHitBend();
    if(BowArmPoseActive && bowArmPoseFrame==Time.frameCount)
     for(int i=0;i<bowArmBones.Length;i++)if(bowArmBones[i])bowArmBones[i].localRotation=bowArmRotations[i];
    if(BowArmPoseActive)AlignImportedBowAim();
    if(!AutoFitGrips)return;
+   if(UsesSwordAttackSet)
+   {
+    var stableHead=GetComponent<PlayerHeadStability>();
+    if(!IsPlayingDamageReaction && stableHead && stableHead.enabled && stableHead.HeadAnimationWeight<=.001f)stableHead.StabilizeHead();
+    if(!stableSwordGripReady && !swordSequence.Active)CalibrateStableSwordGrip();
+   }
+   UpdateSwordRestCarry();
    FitGrip(sword,HumanBodyBones.RightHand,HumanBodyBones.RightIndexProximal,HumanBodyBones.RightLittleProximal,SwordGripOffset,SwordGripAdjustment);
    FitGrip(great,HumanBodyBones.RightHand,HumanBodyBones.RightIndexProximal,HumanBodyBones.RightLittleProximal,GreatswordGripOffset,GreatswordGripAdjustment);
-   if(CurrentWeapon==Weapon.Bow && !(posture && posture.IsProne) && !animationSource.IsRolling)FitAimingBow(BowArmPoseActive);
+   UpdateGreatswordBackCarry();
+   if(CurrentWeapon==Weapon.Bow && !animationSource.IsRolling)FitAimingBow(BowArmPoseActive);
    else FitGrip(bow,HumanBodyBones.LeftHand,HumanBodyBones.LeftIndexProximal,HumanBodyBones.LeftLittleProximal,BowGripOffset,BowGripAdjustment);
-   if(CurrentWeapon==Weapon.Greatsword && great && posture && posture.CurrentStance==CQCPosture.Stance.Crouching
+   if(CurrentWeapon==Weapon.Greatsword && !UsesCopiedSwordAttacks && great && posture && posture.CurrentStance==CQCPosture.Stance.Crouching
       && !animationSource.IsRolling && !animationSource.IsTransitioning && actionTime<=0)
     MatchCrouchedLeftHand(great.transform.TransformPoint(new Vector3(0,-.14f,0)));
   }
@@ -388,10 +414,16 @@ namespace StarterAssets
    if(!model || !model.activeSelf)return;
    var hand=animator.GetBoneTransform(handBone);var index=animator.GetBoneTransform(indexBone);var little=animator.GetBoneTransform(littleBone);
    if(!hand || !index || !little)return;
+   if((model==sword || model==great && (UsesCopiedSwordAttacks || greatswordBackWeight>0f)) && stableSwordGripReady)
+   {
+    model.transform.position=hand.TransformPoint(stableSwordGripPosition+offset);
+    model.transform.rotation=hand.rotation*stableSwordGripRotation*Quaternion.Euler(adjustment);
+    return;
+   }
    Vector3 knuckles=(index.position+little.position)*.5f;
    Vector3 shaft=(index.position-little.position).normalized;
    // In two-handed greatsword poses, both wrists define the handle's shaft.
-   if(model==great && UsesWeaponPose)
+   if(model==great && !UsesCopiedSwordAttacks && greatswordBackWeight<=0f && UsesWeaponPose)
    {
     var other=animator.GetBoneTransform(HumanBodyBones.LeftHand);
     if(other)
@@ -433,9 +465,19 @@ namespace StarterAssets
  public class WeaponArrow : MonoBehaviour
  {
   public Transform Owner;public Vector3 Velocity;public float Damage=35;float life;
-  void Update(){float step=Time.deltaTime;Vector3 delta=Velocity*step;RaycastHit[] hits=Physics.RaycastAll(transform.position,delta.normalized,delta.magnitude,~0,QueryTriggerInteraction.Ignore);System.Array.Sort(hits,(a,b)=>a.distance.CompareTo(b.distance));foreach(var h in hits){if(Owner&&h.transform.IsChildOf(Owner))continue;transform.position=h.point;var enemy=h.collider.GetComponentInParent<CQCTrainingTarget>();if(enemy)enemy.ReceivePunch(Damage,true);enabled=false;Destroy(gameObject,2);return;}transform.position+=delta;Velocity+=Vector3.down*4.9f*step;transform.rotation=Quaternion.LookRotation(Velocity);life+=step;if(life>8)Destroy(gameObject);}
+  void Update(){float step=Time.deltaTime;Vector3 delta=Velocity*step;RaycastHit[] hits=Physics.RaycastAll(transform.position,delta.normalized,delta.magnitude,~0,QueryTriggerInteraction.Ignore);System.Array.Sort(hits,(a,b)=>a.distance.CompareTo(b.distance));foreach(var h in hits){if(Owner&&h.transform.IsChildOf(Owner))continue;transform.position=h.point;var enemy=h.collider.GetComponentInParent<CQCTrainingTarget>();if(enemy)enemy.ReceivePunch(Damage,true);var receiver=h.collider.GetComponentInParent<ICombatDamageReceiver>();if(receiver!=null&&receiver.IsDamageable)receiver.ReceiveDamage(Damage,Owner);enabled=false;Destroy(gameObject,2);return;}transform.position+=delta;Velocity+=Vector3.down*4.9f*step;transform.rotation=Quaternion.LookRotation(Velocity);life+=step;if(life>8)Destroy(gameObject);}
  }
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

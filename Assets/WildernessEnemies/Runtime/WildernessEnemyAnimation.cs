@@ -1,0 +1,9 @@
+using UnityEngine;using UnityEngine.Animations;using UnityEngine.Playables;
+namespace WildernessCombat {
+public sealed class WildernessEnemyAnimation:MonoBehaviour {
+ PlayableGraph graph;AnimationMixerPlayable mixer;AnimationClipPlayable current,previous;AnimationClip clip;float elapsed,blend;bool loop;float speed;
+ public void Initialize(Animator animator){animator.runtimeAnimatorController=null;animator.applyRootMotion=false;animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;graph=PlayableGraph.Create("Wilderness fairy animation");graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);mixer=AnimationMixerPlayable.Create(graph,2);AnimationPlayableOutput.Create(graph,"fairy",animator).SetSourcePlayable(mixer);graph.Play();}
+ public void Play(AnimationClip next,bool repeat,float rate=1){if(!next)return;if(clip==next&&loop==repeat){speed=rate;return;}if(previous.IsValid()){mixer.DisconnectInput(1);graph.DestroyPlayable(previous);}if(current.IsValid()){mixer.DisconnectInput(0);previous=current;graph.Connect(previous,0,mixer,1);}clip=next;loop=repeat;speed=rate;elapsed=blend=0;current=AnimationClipPlayable.Create(graph,next);current.SetApplyFootIK(false);current.SetApplyPlayableIK(false);current.SetSpeed(0);graph.Connect(current,0,mixer,0);mixer.SetInputWeight(0,previous.IsValid()?0:1);mixer.SetInputWeight(1,previous.IsValid()?1:0);}
+ void Update(){if(!graph.IsValid()||!clip)return;float dt=Time.deltaTime;elapsed+=dt*speed;blend+=dt;current.SetTime(loop?elapsed%clip.length:Mathf.Min(elapsed,clip.length-.001f));if(previous.IsValid()){float w=Mathf.Clamp01(blend/.1f);mixer.SetInputWeight(0,w);mixer.SetInputWeight(1,1-w);if(w>=1){mixer.DisconnectInput(1);graph.DestroyPlayable(previous);previous=default;}}graph.Evaluate(0);}
+ void OnEnable(){if(graph.IsValid())graph.Play();}void OnDisable(){if(graph.IsValid())graph.Stop();}void OnDestroy(){if(graph.IsValid())graph.Destroy();}
+}}

@@ -47,7 +47,7 @@ namespace StarterAssets.CQCEditorTools
             PrefabUtility.RecordPrefabInstancePropertyModifications(spawner);
             EditorSceneManager.MarkSceneDirty(player.scene);
             Selection.activeGameObject = player;
-            EditorUtility.DisplayDialog("CQC Setup", "CQC controls are attached to PlayerArmature. Save the scene, press Play, and click inside Game. Use C to crouch and Z to lie prone. The practice bot appears nearby if there is a clear space.", "OK");
+            EditorUtility.DisplayDialog("CQC Setup", "CQC controls are attached to PlayerArmature. Save the scene, press Play, and click inside Game. Use C to toggle standing and crouching. The practice bot appears nearby if there is a clear space.", "OK");
         }
     }
 }

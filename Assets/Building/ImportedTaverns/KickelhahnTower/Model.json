@@ -1,1 +1,0 @@
-{"name": "KickelhahnTower", "materials": [{"name": "Material.000", "baseFactor": [1, 1, 1, 1], "metal": 0.0, "rough": 0.7564989966, "doubleSided": true, "albedo": "Material0_albedo.png", "normal": "Material0_normal.png", "emissionFactor": [0, 0, 0]}], "primitives": [{"file": "Mesh0.bytes", "material": 0}]}

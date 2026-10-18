@@ -1,0 +1,240 @@
+{
+  "Items": [
+    {
+      "Role": "Knights",
+      "Name": "Knights-Male",
+      "Parts": [
+        "Chr_Torso_Male_16",
+        "Chr_Hips_Male_14",
+        "Chr_LegLeft_Male_08",
+        "Chr_LegRight_Male_08",
+        "Chr_ArmUpperLeft_Male_01",
+        "Chr_ArmUpperRight_Male_01",
+        "Chr_ArmLowerLeft_Male_05",
+        "Chr_ArmLowerRight_Male_05",
+        "Chr_HandLeft_Male_01",
+        "Chr_HandRight_Male_01",
+        "Chr_Head_No_Elements_Male_10",
+        "Chr_ShoulderAttachLeft_01",
+        "Chr_ShoulderAttachRight_01"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Knights.png"
+    },
+    {
+      "Role": "Knights",
+      "Name": "Knights-Female",
+      "Parts": [
+        "Chr_Torso_Female_16",
+        "Chr_Hips_Female_14",
+        "Chr_LegLeft_Female_08",
+        "Chr_LegRight_Female_08",
+        "Chr_ArmUpperLeft_Female_01",
+        "Chr_ArmUpperRight_Female_01",
+        "Chr_ArmLowerLeft_Female_05",
+        "Chr_ArmLowerRight_Female_05",
+        "Chr_HandLeft_Female_01",
+        "Chr_HandRight_Female_01",
+        "Chr_Head_No_Elements_Female_10",
+        "Chr_ShoulderAttachLeft_01",
+        "Chr_ShoulderAttachRight_01"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Knights.png"
+    },
+    {
+      "Role": "Guards",
+      "Name": "Guards-Male",
+      "Parts": [
+        "Chr_Torso_Male_16",
+        "Chr_Hips_Male_14",
+        "Chr_LegLeft_Male_08",
+        "Chr_LegRight_Male_08",
+        "Chr_ArmUpperLeft_Male_20",
+        "Chr_ArmUpperRight_Male_20",
+        "Chr_ArmLowerLeft_Male_05",
+        "Chr_ArmLowerRight_Male_05",
+        "Chr_HandLeft_Male_01",
+        "Chr_HandRight_Male_01",
+        "Chr_Head_Male_05",
+        "Chr_HeadCoverings_No_Hair_04"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Guards.png"
+    },
+    {
+      "Role": "Guards",
+      "Name": "Guards-Female",
+      "Parts": [
+        "Chr_Torso_Female_16",
+        "Chr_Hips_Female_14",
+        "Chr_LegLeft_Female_08",
+        "Chr_LegRight_Female_08",
+        "Chr_ArmUpperLeft_Female_20",
+        "Chr_ArmUpperRight_Female_20",
+        "Chr_ArmLowerLeft_Female_05",
+        "Chr_ArmLowerRight_Female_05",
+        "Chr_HandLeft_Female_01",
+        "Chr_HandRight_Female_01",
+        "Chr_Head_Female_03",
+        "Chr_HeadCoverings_No_Hair_04"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Guards.png"
+    },
+    {
+      "Role": "Adventurers",
+      "Name": "Adventurers-Male",
+      "Parts": [
+        "Chr_Torso_Male_14",
+        "Chr_Hips_Male_00",
+        "Chr_LegLeft_Male_04",
+        "Chr_LegRight_Male_04",
+        "Chr_ArmUpperLeft_Male_11",
+        "Chr_ArmUpperRight_Male_11",
+        "Chr_ArmLowerLeft_Male_10",
+        "Chr_ArmLowerRight_Male_10",
+        "Chr_HandLeft_Male_03",
+        "Chr_HandRight_Male_03",
+        "Chr_Head_Male_05",
+        "Chr_Hair_10",
+        "Chr_BackAttachment_04"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Adventurers.png"
+    },
+    {
+      "Role": "Adventurers",
+      "Name": "Adventurers-Female",
+      "Parts": [
+        "Chr_Torso_Female_14",
+        "Chr_Hips_Female_00",
+        "Chr_LegLeft_Female_04",
+        "Chr_LegRight_Female_04",
+        "Chr_ArmUpperLeft_Female_11",
+        "Chr_ArmUpperRight_Female_11",
+        "Chr_ArmLowerLeft_Female_10",
+        "Chr_ArmLowerRight_Female_10",
+        "Chr_HandLeft_Female_03",
+        "Chr_HandRight_Female_03",
+        "Chr_Head_Female_03",
+        "Chr_Hair_07",
+        "Chr_BackAttachment_04"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Adventurers.png"
+    },
+    {
+      "Role": "Rogues",
+      "Name": "Rogues-Male",
+      "Parts": [
+        "Chr_Torso_Male_14",
+        "Chr_Hips_Male_00",
+        "Chr_LegLeft_Male_04",
+        "Chr_LegRight_Male_04",
+        "Chr_ArmUpperLeft_Male_11",
+        "Chr_ArmUpperRight_Male_11",
+        "Chr_ArmLowerLeft_Male_10",
+        "Chr_ArmLowerRight_Male_10",
+        "Chr_HandLeft_Male_03",
+        "Chr_HandRight_Male_03",
+        "Chr_Head_Male_05",
+        "Chr_HeadCoverings_No_Hair_03",
+        "Chr_BackAttachment_04"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Rogues.png"
+    },
+    {
+      "Role": "Rogues",
+      "Name": "Rogues-Female",
+      "Parts": [
+        "Chr_Torso_Female_14",
+        "Chr_Hips_Female_00",
+        "Chr_LegLeft_Female_04",
+        "Chr_LegRight_Female_04",
+        "Chr_ArmUpperLeft_Female_11",
+        "Chr_ArmUpperRight_Female_11",
+        "Chr_ArmLowerLeft_Female_10",
+        "Chr_ArmLowerRight_Female_10",
+        "Chr_HandLeft_Female_03",
+        "Chr_HandRight_Female_03",
+        "Chr_Head_Female_03",
+        "Chr_HeadCoverings_No_Hair_03",
+        "Chr_BackAttachment_04"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Rogues.png"
+    },
+    {
+      "Role": "Mages",
+      "Name": "Mages-Male",
+      "Parts": [
+        "Chr_Torso_Male_05",
+        "Chr_Hips_Male_23",
+        "Chr_LegLeft_Male_04",
+        "Chr_LegRight_Male_04",
+        "Chr_ArmUpperLeft_Male_20",
+        "Chr_ArmUpperRight_Male_20",
+        "Chr_ArmLowerLeft_Male_18",
+        "Chr_ArmLowerRight_Male_18",
+        "Chr_HandLeft_Male_00",
+        "Chr_HandRight_Male_00",
+        "Chr_Head_Male_05",
+        "Chr_HeadCoverings_No_Hair_05",
+        "Chr_BackAttachment_05"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Mages.png"
+    },
+    {
+      "Role": "Mages",
+      "Name": "Mages-Female",
+      "Parts": [
+        "Chr_Torso_Female_05",
+        "Chr_Hips_Female_23",
+        "Chr_LegLeft_Female_04",
+        "Chr_LegRight_Female_04",
+        "Chr_ArmUpperLeft_Female_20",
+        "Chr_ArmUpperRight_Female_20",
+        "Chr_ArmLowerLeft_Female_18",
+        "Chr_ArmLowerRight_Female_18",
+        "Chr_HandLeft_Female_00",
+        "Chr_HandRight_Female_00",
+        "Chr_Head_Female_03",
+        "Chr_HeadCoverings_No_Hair_05",
+        "Chr_BackAttachment_05"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Mages.png"
+    },
+    {
+      "Role": "Townspeople",
+      "Name": "Townspeople-Male",
+      "Parts": [
+        "Chr_Torso_Male_05",
+        "Chr_Hips_Male_23",
+        "Chr_LegLeft_Male_04",
+        "Chr_LegRight_Male_04",
+        "Chr_ArmUpperLeft_Male_20",
+        "Chr_ArmUpperRight_Male_20",
+        "Chr_ArmLowerLeft_Male_18",
+        "Chr_ArmLowerRight_Male_18",
+        "Chr_HandLeft_Male_00",
+        "Chr_HandRight_Male_00",
+        "Chr_Head_Male_05",
+        "Chr_Hair_10"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Townspeople.png"
+    },
+    {
+      "Role": "Townspeople",
+      "Name": "Townspeople-Female",
+      "Parts": [
+        "Chr_Torso_Female_05",
+        "Chr_Hips_Female_23",
+        "Chr_LegLeft_Female_04",
+        "Chr_LegRight_Female_04",
+        "Chr_ArmUpperLeft_Female_20",
+        "Chr_ArmUpperRight_Female_20",
+        "Chr_ArmLowerLeft_Female_18",
+        "Chr_ArmLowerRight_Female_18",
+        "Chr_HandLeft_Female_00",
+        "Chr_HandRight_Female_00",
+        "Chr_Head_Female_03",
+        "Chr_Hair_07"
+      ],
+      "TexturePath": "Assets/CityExpansion/SyntyNpcRoles/Townspeople.png"
+    }
+  ]
+}

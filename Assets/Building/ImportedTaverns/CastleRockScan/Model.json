@@ -1,1 +1,0 @@
-{"name": "CastleRockScan", "materials": [{"name": "material_0", "baseFactor": [1, 1, 1, 1], "metal": 0.0, "rough": 0.7123287671232876, "doubleSided": true, "albedo": "Material0_albedo.png", "packed": "Material0_metalSmooth.png", "occlusion": "Material0_occlusion.png", "emissionFactor": [0, 0, 0]}], "primitives": [{"file": "Mesh0.bytes", "material": 0}]}

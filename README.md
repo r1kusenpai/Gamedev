@@ -12,3 +12,8 @@ Unity medieval castle and town project.
 Unity regenerates the Library and other editor caches on first open. Assets, metadata, Packages, and ProjectSettings are included. Local scene backups and temporary editor action requests are excluded.
 
 Third-party assets retain their respective licenses; check their license terms before reuse or redistribution.
+
+## Sharing copy verification
+
+Current project content is approximately 3.01 GB, excluding Git history and regenerated Unity caches. MyForest and ThroneDomain reference checks, enemy spawning, player hit mesh, destination teleports, and queen battle checks passed in batch mode. A UnityEditor.Search.SearchDatabase startup/indexing exception remains reproducible. Full visual and exhaustive gameplay verification has not been completed. Older repository history is preserved and can increase clone storage.
+
